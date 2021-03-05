@@ -1,4 +1,4 @@
-const {queue , active_sessions} = require('../config/database');
+const {queue , active_sessions} = require('../../app/config/database');
 const {MessageType} = require("@adiwajshing/baileys");
 
 const helper = {
