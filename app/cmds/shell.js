@@ -1,6 +1,6 @@
-const { MessageType } = require("@adiwajshing/baileys");
-const fs = require("fs");
+const { exec } = require("child_process");
 
+const { MessageType } = require("@adiwajshing/baileys");
 const {
   text,
   extendedText,
@@ -15,28 +15,26 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
+exports.run = (zef, message, args, from, runnin) => {
   if (
     runnin.id !== runnin.config.developer.ibnu &&
     runnin.id !== runnin.config.developer.zefian &&
     runnin.id !== runnin.config.developer.rizqi &&
     runnin.id !== runnin.config.developer.bot
   ) return runnin.reply("just owner");
-    setTimeout(() => {
-        runnin.reply("Bot akan di shutdown 3 detik lagi")
-     }, 1500);
-     setTimeout(() => {
-       runnin.reply("Bot shutdown")
-     }, 1000 * 5)
-     setTimeout(() => {
-       process.exit(1)
-     }, 5000)
+
+  if (args.length < 1) return runnin.reply("masukan command")
+  let command = args.join(" ")
+  exec(command, (err, res) => {
+      if (err) console.log(err)
+      runnin.reply(res)
+  })
 };
 
 exports.help = {
-  name: "Shutdown",
+  name: "Shell",
   description: "",
-  usage: "shutdown",
+  usage: "shell",
   cooldown: 5,
   kategori: "owner",
 };

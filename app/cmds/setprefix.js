@@ -16,10 +16,11 @@ const {
 } = MessageType;
 
 exports.run = (zef, message, args, from, runnin) => {
+    if (!runnin.isGroup) return runnin.reply("hanya grup")
     if (!args[0]) return runnin.reply('Usage: !prefix <desired prefix here>')
     let prefixes = JSON.parse(fs.readFileSync("./app/database/prefixes.json"));
 
-    prefixes[runnin.id] = {
+    prefixes[from] = {
         prefixes: args[0]
       };
     fs.writeFileSync("./app/database/prefixes.json", JSON.stringify(prefixes), (err) => {
@@ -35,4 +36,5 @@ exports.help = {
   description: "PING PONG",
   usage: "ping",
   cooldown: 5,
+  kategori: "util",
 };

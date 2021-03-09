@@ -14,8 +14,14 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
-  if (runnin.id != "6289630171792@s.whatsapp.net") return runnin.reply("just owner")
+exports.run = async (zef, msg, args, from, runnin) => {
+  if (
+    runnin.id !== runnin.config.developer.ibnu &&
+    runnin.id !== runnin.config.developer.zefian &&
+    runnin.id !== runnin.config.developer.rizqi &&
+    runnin.id !== runnin.config.developer.bot
+  )
+    return runnin.reply("just owner");
   function clean(text) {
     if (typeof text === "string")
       return text
@@ -28,7 +34,7 @@ exports.run = (zef, msg, args, from, runnin) => {
     let evaled = eval(code);
 
     if (typeof evaled !== "string") evaled = require("util").inspect(evaled);
-    zef.sendMessage(from, (clean(evaled)), text);
+    zef.sendMessage(from, clean(evaled), text);
   } catch (err) {
     runnin.sendText(`${clean(err)}`);
   }
@@ -36,7 +42,8 @@ exports.run = (zef, msg, args, from, runnin) => {
 
 exports.help = {
   name: "Eval",
-  description: "Show the bot's commands list",
-  usage: "eval",
+  description: "",
+  usage: `eval  <something>`,
   cooldown: 5,
+  kategori: "owner",
 };

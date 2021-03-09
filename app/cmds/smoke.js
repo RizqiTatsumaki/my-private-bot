@@ -39,8 +39,9 @@ exports.run = (zef, msg, args, from, runnin) => {
 };
 
 exports.help = {
-  name: "Google",
-  description: "Show the bot's commands list",
-  usage: "google",
+  name: "Smoke",
+  description: "",
+  usage: "smoke",
   cooldown: 5,
+  kategori: 'fun',
 };

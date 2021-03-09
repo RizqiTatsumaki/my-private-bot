@@ -10,6 +10,8 @@ const qrcode = require("qrcode-terminal");
 const fs = require("fs");
 // Ngambil collections di Database
 const { queue, active_sessions } = require("./app/config/database");
+const config = require("./app/config/values.json")
+const modeAnon = JSON.parse(fs.readFileSync("./app/database/modeAnon.json"));
 const { msgFilter } = require(process.cwd() + "/msgFilter");
 //Fimgsi handler
 const handler = {
@@ -81,14 +83,16 @@ async function starts() {
 
       let defaultPrefix = "/";
 
-      let prefixes = JSON.parse(fs.readFileSync("./app/database/prefixes.json", "utf8"));
-      if (!prefixes[id]) {
-        prefixes[id] = {
+      let prefixes = JSON.parse(
+        fs.readFileSync("./app/database/prefixes.json", "utf8")
+      );
+      if (!prefixes[from]) {
+        prefixes[from] = {
           prefixes: defaultPrefix,
         };
       }
 
-      let prefix = prefixes[id].prefixes;
+      let prefix = prefixes[from].prefixes;
 
       global.prefix;
 
@@ -116,7 +120,9 @@ async function starts() {
 
       const pushname = msg.key.fromMe
         ? zef.user.name
-        : getPushname.notify || getPushname.vname || getPushname.name || "-";
+        : getPushname.vname || getPushname.name || getPushname.notify || "-";
+
+      const isAnon = isGroup ? false : modeAnon.includes(id);
 
       const groupMetadata = isGroup ? await zef.groupMetadata(from) : "";
       const groupName = isGroup ? groupMetadata.subject : "";
@@ -146,7 +152,18 @@ async function starts() {
         zef.sendMessage(from, teks, text);
       };
 
+      getProfileFunction = async aidi => {
+        try {
+          pp = await zef.getProfilePicture(aidi)
+        } catch (e){
+          pp = ""
+        }
+        return pp
+      }
+
+
       const runnin = {
+        config: config,
         reply: reply,
         sendText: sendText,
         id: id,
@@ -154,11 +171,18 @@ async function starts() {
         pushname: pushname,
         isGroup: isGroup,
         groupMetadata: groupMetadata,
+        getProfileUsers: getProfileFunction,
       };
+
       if (availableCommands.has(argv)) {
         if (msgFilter.isFiltered(id))
           return reply("Tunggu 10 detik untuk menggunakan command lagi !!");
-        msgFilter.addFilter(id);
+          if (
+            runnin.id !== runnin.config.developer.ibnu &&
+            runnin.id !== runnin.config.developer.zefian &&
+            // runnin.id !== runnin.config.developer.rizqi &&
+            runnin.id !== runnin.config.developer.bot
+          ) msgFilter.addFilter(id);
         require(`./app/cmds/${argv}`).run(zef, msg, args, from, runnin);
         console.log(availableCommands);
         console.log(
@@ -169,140 +193,184 @@ async function starts() {
         console.log(msgFilter);
       }
 
-      if (!isGroup) {
-        if (isCmd) {
-          switch (argv) {
-            case "help":
-              zef.sendMessage(
-                from,
-                "Hai teman, Fitur :\n/help\n/find\n/stop",
-                text,
-                { quoted: msg }
+      switch (argv) {
+        case "anon":
+          if (isGroup) return reply("hanya untuk private chat");
+          switch (args[0]) {
+            case "enable":
+              if (isAnon) return reply("mode anonymous chat telah aktif");
+              modeAnon.push(id);
+              fs.writeFileSync(
+                "./app/database/modeAnon.json",
+                JSON.stringify(modeAnon)
               );
+              reply("Sukses mengaktifkan fitur anonymous chat di chat ini ✔️");
               break;
-            case "find":
-              if (isGroup) return zef.chatRead(msg.key.remoteJid);
-              // Fungsi untuk mencari partner
-              const isActiveSess = await helper.isActiveSession(
-                id,
-                zef,
-                MessageType.text
+            case "disable":
+              if (!isAnon)
+                return reply(
+                  "mode anonymous chat tidak pernah di aktifkan di chat ini"
+                );
+              modeAnon.splice(id);
+              fs.writeFileSync(
+                "./app/database/modeAnon.json",
+                JSON.stringify(modeAnon)
               );
-              // Apakah user sudah punya sesi chatting ?
-              if (!isActiveSess) {
-                await zef.sendMessage(
-                  id,
-                  "Kegagalan Server!",
-                  MessageType.text
-                );
-              }
-
-              // Apakah user udah ada di antrian ?
-              const isQueue = await queue.find({ user_id: id });
-              console.log(isQueue);
-              if (!isQueue.length) {
-                // Kalo gak ada masukin ke antrian
-                await queue.insert({
-                  user_id: id,
-                  timestamp: parseInt(moment().format("X")),
-                });
-              }
-              // Kirim pesan kalo lagi nyari partner
-              zef.sendMessage(id, "Mencari Partner Chat ...", MessageType.text);
-              // apakah ada user lain yang dalam antrian ?
-              var queueList = await queue.find({
-                user_id: { $not: { $eq: id } },
-              });
-              // Selama gak ada user dalam antrian , cari terus boss
-              while (queueList.length < 1) {
-                queueList = await queue.find({
-                  user_id: { $not: { $eq: id } },
-                });
-              }
-
-              // Nah dah ketemu nih , ambil user id dari partner
-              const partnerId = queueList[0].user_id;
-              // Ini ngamdil data antrian kamu
-              const you = await queue.findOne({ user_id: id });
-              // Ini ngamdil data antrian partner kamu
-              const partner = await queue.findOne({ user_id: partnerId });
-
-              // Kalo data antrian kamu belum di apus (atau belum di perintah /stop)
-              if (you !== null) {
-                // apakah kamu duluan yang nyari partner atau partnermu
-                if (you.timestamp < partner.timestamp) {
-                  // kalo kamu duluan kamu yang mulai sesi , partner mu cuma numpang
-                  await active_sessions.insert({ user1: id, user2: partnerId });
-                }
-                // Hapus data kamu sama partnermu dalam antrian
-                for (let i = 0; i < 2; ++i) {
-                  const data = await queue.find({
-                    user_id: i > 0 ? partnerId : id,
-                  });
-                  await queue.remove({ id: data.id });
-                }
-
-                // Kirim pesan ke kamu kalo udah nemu partner
-                await zef.sendMessage(
-                  id,
-                  "Kamu Menemukan Partner chat\nSegera Kirim Pesan",
-                  MessageType.text
-                );
-              }
-              break;
-            case "stop":
-              const searchActiveSess = await helper.isActiveSession(id, zef);
-              if (searchActiveSess) {
-                // kalo ada hapus sesi nya
-                await zef.sendMessage(
-                  id,
-                  "Kamu telah berhenti chatting dengan partnermu \n ketik /find untuk mulai mencari partner baru",
-                  MessageType.text
-                );
-              } else if (!searchActiveSess) {
-                // Kalo gak ada hapus data kamu dalam antrian
-                const queueData = await queue.findOne({ user_id: id });
-                await queue.remove({ id: queueData.id });
-                await zef.sendMessage(
-                  id,
-                  "Kamu telah berhenti mencari partner \n ketik /find untuk mulai mencari partner",
-                  MessageType.text
-                );
-              }
+              reply("Sukses menonaktifkan fitur anonymous chat di chat ini ✔️");
               break;
             default:
-              break;
+              reply(`usage: ${prefix}anon enable or ${prefix}anon disable`);
           }
-        } else {
-          if (msg.key.fromMe) return;
+          break;
+      }
 
-          console.log(`mendapat pesan dari ${id}`);
-          // Nah ini buat saling balas-balasan sama partner kamu
+      if (isAnon) {
+        if (!isGroup) {
+          if (isCmd) {
+            switch (argv) {
+              case "help":
+                zef.sendMessage(
+                  from,
+                  "Hai teman, Fitur :\n/help\n/find\n/stop",
+                  text,
+                  { quoted: msg }
+                );
+                break;
+              case "find":
+                if (isGroup) return zef.chatRead(msg.key.remoteJid);
+                // Fungsi untuk mencari partner
+                const isActiveSess = await helper.isActiveSession(
+                  id,
+                  zef,
+                  MessageType.text
+                );
+                // Apakah user sudah punya sesi chatting ?
+                if (!isActiveSess) {
+                  await zef.sendMessage(
+                    id,
+                    "Kegagalan Server!",
+                    MessageType.text
+                  );
+                }
 
-          // Cek dulu , kamu ada partner apa enggak
-          const isActiveSess = await active_sessions.findOne({
-            $or: [{ user1: id }, { user2: id }],
-          });
+                // Apakah user udah ada di antrian ?
+                const isQueue = await queue.find({ user_id: id });
+                console.log(isQueue);
+                if (!isQueue.length) {
+                  // Kalo gak ada masukin ke antrian
+                  await queue.insert({
+                    user_id: id,
+                    timestamp: parseInt(moment().format("X")),
+                  });
+                }
+                // Kirim pesan kalo lagi nyari partner
+                zef.sendMessage(
+                  id,
+                  "Mencari Partner Chat ...",
+                  MessageType.text
+                );
+                // apakah ada user lain yang dalam antrian ?
+                var queueList = await queue.find({
+                  user_id: { $not: { $eq: id } },
+                });
+                // Selama gak ada user dalam antrian , cari terus boss
+                while (queueList.length < 1) {
+                  queueList = await queue.find({
+                    user_id: { $not: { $eq: id } },
+                  });
+                }
 
-          if (isActiveSess !== null) {
-            // Nah kalo ada ambil data sesi chatting nya
-            const session = await active_sessions.findOne({
+                // Nah dah ketemu nih , ambil user id dari partner
+                const partnerId = queueList[0].user_id;
+                // Ini ngamdil data antrian kamu
+                const you = await queue.findOne({ user_id: id });
+                // Ini ngamdil data antrian partner kamu
+                const partner = await queue.findOne({ user_id: partnerId });
+
+                // Kalo data antrian kamu belum di apus (atau belum di perintah /stop)
+                if (you !== null) {
+                  // apakah kamu duluan yang nyari partner atau partnermu
+                  if (you.timestamp < partner.timestamp) {
+                    // kalo kamu duluan kamu yang mulai sesi , partner mu cuma numpang
+                    await active_sessions.insert({
+                      user1: id,
+                      user2: partnerId,
+                    });
+                  }
+                  // Hapus data kamu sama partnermu dalam antrian
+                  for (let i = 0; i < 2; ++i) {
+                    const data = await queue.find({
+                      user_id: i > 0 ? partnerId : id,
+                    });
+                    await queue.remove({ id: data.id });
+                  }
+
+                  // Kirim pesan ke kamu kalo udah nemu partner
+                  await zef.sendMessage(
+                    id,
+                    "Kamu Menemukan Partner chat\nSegera Kirim Pesan",
+                    MessageType.text
+                  );
+                }
+                break;
+              case "stop":
+                const searchActiveSess = await helper.isActiveSession(id, zef);
+                if (searchActiveSess) {
+                  // kalo ada hapus sesi nya
+                  await zef.sendMessage(
+                    id,
+                    "Kamu telah berhenti chatting dengan partnermu \n ketik /find untuk mulai mencari partner baru",
+                    MessageType.text
+                  );
+                } else if (!searchActiveSess) {
+                  // Kalo gak ada hapus data kamu dalam antrian
+                  const queueData = await queue.findOne({ user_id: id });
+                  await queue.remove({ id: queueData.id });
+                  await zef.sendMessage(
+                    id,
+                    "Kamu telah berhenti mencari partner \n ketik /find untuk mulai mencari partner",
+                    MessageType.text
+                  );
+                }
+                break;
+              default:
+                break;
+            }
+          } else {
+            if (msg.key.fromMe) return;
+
+            console.log(`mendapat pesan dari ${id}`);
+            // Nah ini buat saling balas-balasan sama partner kamu
+
+            // Cek dulu , kamu ada partner apa enggak
+            const isActiveSess = await active_sessions.findOne({
               $or: [{ user1: id }, { user2: id }],
             });
-            const { user1, user2 } = session;
-            // Ini buat ngamil user id partner kamu
-            const target = user1 == id ? user2 : user1;
 
-            if (!msg.message.conversation) return;
+            if (isActiveSess !== null) {
+              // Nah kalo ada ambil data sesi chatting nya
+              const session = await active_sessions.findOne({
+                $or: [{ user1: id }, { user2: id }],
+              });
+              const { user1, user2 } = session;
+              // Ini buat ngamil user id partner kamu
+              const target = user1 == id ? user2 : user1;
 
-            zef.sendMessage(target, msg.message.conversation, MessageType.text);
-          } else {
-            // Ini kalo kamu gak punya partner chatting
-            await zef.sendMessage(
-              id,
-              "Kamu belum punya partner chatting \nketik /find untuk mencari partner chatting",
-              MessageType.text
-            );
+              if (!msg.message.conversation) return;
+
+              zef.sendMessage(
+                target,
+                msg.message.conversation,
+                MessageType.text
+              );
+            } else {
+              // Ini kalo kamu gak punya partner chatting
+              await zef.sendMessage(
+                id,
+                "Kamu belum punya partner chatting \nketik /find untuk mencari partner chatting",
+                MessageType.text
+              );
+            }
           }
         }
       }

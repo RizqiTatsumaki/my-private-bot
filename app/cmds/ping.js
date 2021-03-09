@@ -12,5 +12,6 @@ exports.help = {
     name: "Ping",
     description: "PING PONG",
     usage: "ping",
-    cooldown: 5
+    cooldown: 5,
+    kategori: "util",
 };

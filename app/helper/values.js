@@ -1,1 +1,0 @@
-exports.nomorOwner = "6289630171792@s.whatsapp.net"

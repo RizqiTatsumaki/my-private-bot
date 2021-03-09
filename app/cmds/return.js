@@ -1,6 +1,4 @@
 const { MessageType } = require("@adiwajshing/baileys");
-const fs = require("fs");
-
 const {
   text,
   extendedText,
@@ -15,28 +13,20 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
+exports.run = (zef, message, args, from, runnin) => {
   if (
     runnin.id !== runnin.config.developer.ibnu &&
     runnin.id !== runnin.config.developer.zefian &&
     runnin.id !== runnin.config.developer.rizqi &&
     runnin.id !== runnin.config.developer.bot
-  ) return runnin.reply("just owner");
-    setTimeout(() => {
-        runnin.reply("Bot akan di shutdown 3 detik lagi")
-     }, 1500);
-     setTimeout(() => {
-       runnin.reply("Bot shutdown")
-     }, 1000 * 5)
-     setTimeout(() => {
-       process.exit(1)
-     }, 5000)
+  )
+    return runnin.reply("just owner");
+  runnin.reply(JSON.stringify(eval(message, null, "	")));
 };
 
 exports.help = {
-  name: "Shutdown",
-  description: "",
-  usage: "shutdown",
+  name: "return",
+  description: "RETURN MESSAGE",
+  usage: "return",
   cooldown: 5,
-  kategori: "owner",
 };
