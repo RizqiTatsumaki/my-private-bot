@@ -14,7 +14,7 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
+exports.run = (zef, msg, args, from) => {
   let tmpFile = {};
   readdir(process.cwd() + "/app/cmds", (err, files) => {
     if (err) throw err;
@@ -30,11 +30,11 @@ exports.run = (zef, msg, args, from, runnin) => {
       var hasilSort = h.sort((a, b) => (a == b ? 0 : a > b ? 1 : -1));
       zef.sendMessage(
         from,
-        `Hai ${runnin.pushname}\nPrefix: ${
-          runnin.prefix
+        `Hai ${zef.pushname}\nPrefix: ${
+          zef.prefix
         }\n\n*Available commands:*\n${hasilSort.join(
           "\n"
-        )}\n\n_You can run *help <command name>* to show advanced help._`,
+        )}\n\n_You can run *${zef.prefix}help <command name>* to show advanced help._`,
         text,
         { quoted: msg }
       );
@@ -46,7 +46,7 @@ exports.run = (zef, msg, args, from, runnin) => {
       if (usage == "") usage = "no usage"
       zef.sendMessage(
         from,
-        `*${name}*\n\nDescription: ${description}\nUsage: \`\`\`${runnin.prefix}${usage}\`\`\``,
+        `*${name}*\n\nDescription: ${description}\nUsage: \`\`\`${zef.prefix}${usage}\`\`\``,
         text,
         { quoted: msg }
       );

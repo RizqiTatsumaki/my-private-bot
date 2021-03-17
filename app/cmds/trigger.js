@@ -19,7 +19,7 @@ const {
   product,
 } = MessageType;
 
-exports.run = async (zef, msg, args, from, runnin) => {
+exports.run = async (zef, msg, args, from) => {
   const getBuffer = async (url, options) => {
     try {
       options ? options : {};
@@ -38,17 +38,22 @@ exports.run = async (zef, msg, args, from, runnin) => {
       console.log(`Error : ${e}`);
     }
   };
+  let mentioned = msg.message.extendedTextMessage ? msg.message.extendedTextMessage.contextInfo.mentionedJid : null
+
+  console.log(mentioned)
   try {
-    var pict = await zef.getProfilePicture(runnin.id);
+    if (!mentioned) var pict = await zef.getProfilePicture(zef.id);
+    if (mentioned) var pict = await zef.getProfilePicture(mentioned[0])
   } catch {
     var pict =
       "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60";
   }
 
-  var fileName = Math.random().toString(36).substring(7);
+  // var fileName = Math.random().toString(36).substring(7);
 
+  zef.reply("bentar")
   var img = await getBuffer(pict);
-  fs.writeFileSync(`./trash/img_usr/${runnin.pushname}.png`, img);
+  fs.writeFileSync(`./trash/img_usr/${zef.pushname}.png`, img);
 
   var ambil = await Canvas.trigger(img);
   await fs.writeFileSync(`./trash/${msg.key.id}.gif`, ambil);
@@ -59,7 +64,7 @@ exports.run = async (zef, msg, args, from, runnin) => {
     .on("error", function (err) {
       console.log(`Error : ${err}`);
       fs.unlinkSync(`./trash/${msg.key.id}.gif`);
-      runnin.reply("Error");
+      zef.reply("Error");
     })
     .on("end", function () {
       console.log("Finish");

@@ -15,22 +15,21 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
+exports.run = (zef, msg, args, from) => {
   if (
-    runnin.id !== runnin.config.developer.ibnu &&
-    runnin.id !== runnin.config.developer.zefian &&
-    runnin.id !== runnin.config.developer.rizqi &&
-    runnin.id !== runnin.config.developer.bot
-  ) return runnin.reply("just owner");
-    setTimeout(() => {
-        runnin.reply("Bot akan di shutdown 3 detik lagi")
-     }, 1500);
-     setTimeout(() => {
-       runnin.reply("Bot shutdown")
-     }, 1000 * 5)
-     setTimeout(() => {
-       process.exit(1)
-     }, 5000)
+    zef.id !== zef.config.developer.ibnu &&
+    zef.id !== zef.config.developer.zefian &&
+    zef.id !== zef.config.developer.rizqi &&
+    zef.id !== zef.config.developer.bot
+  )
+    return zef.reply("just owner");
+  zef.reply("Bot akan di shutdown 3 detik lagi");
+  setTimeout(() => {
+    zef.sendText("Bot shutdown");
+  }, 1000 * 5);
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
 };
 
 exports.help = {

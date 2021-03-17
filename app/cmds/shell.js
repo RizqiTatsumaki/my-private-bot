@@ -15,19 +15,19 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, message, args, from, runnin) => {
+exports.run = (zef, message, args, from) => {
   if (
-    runnin.id !== runnin.config.developer.ibnu &&
-    runnin.id !== runnin.config.developer.zefian &&
-    runnin.id !== runnin.config.developer.rizqi &&
-    runnin.id !== runnin.config.developer.bot
-  ) return runnin.reply("just owner");
-
-  if (args.length < 1) return runnin.reply("masukan command")
+    zef.id !== zef.config.developer.ibnu &&
+    zef.id !== zef.config.developer.zefian &&
+    zef.id !== zef.config.developer.rizqi &&
+    zef.id !== zef.config.developer.bot
+  ) return zef.reply("just owner");
+  
+  if (args.length < 1) return zef.reply("masukan command")
   let command = args.join(" ")
   exec(command, (err, res) => {
       if (err) console.log(err)
-      runnin.reply(res)
+      zef.reply(res)
   })
 };
 

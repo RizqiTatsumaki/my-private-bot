@@ -13,15 +13,15 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, message, args, from, runnin) => {
+exports.run = (zef, message, args, from) => {
   if (
-    runnin.id !== runnin.config.developer.ibnu &&
-    runnin.id !== runnin.config.developer.zefian &&
-    runnin.id !== runnin.config.developer.rizqi &&
-    runnin.id !== runnin.config.developer.bot
+    zef.id !== zef.config.developer.ibnu &&
+    zef.id !== zef.config.developer.zefian &&
+    //zef.id !== zef.config.developer.rizqi &&
+    zef.id !== zef.config.developer.bot
   )
-    return runnin.reply("just owner");
-  runnin.reply(JSON.stringify(eval(message, null, "	")));
+    return zef.reply("just owner");
+  zef.reply(JSON.stringify(eval(message, null, "	")));
 };
 
 exports.help = {

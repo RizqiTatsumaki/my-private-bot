@@ -1,14 +1,15 @@
 const { MessageType } = require("@adiwajshing/baileys")
 const { text, extendedText, contact, location, liveLocation, image, video, sticker, document, audio, product } = MessageType
 
-exports.run = (zef, msg, args, from, runnin) => {
 
-}
+exports.run = (zef, message, args, from, runnin) => {
+    //input you code here
+};
 
 exports.help = {
-    name: "Anon",
-    description: "enable / disabe anon mode",
-    usage: "anon",
+    name: "Command Name",
+    description: "",
+    usage: "",
     cooldown: 5,
-    kategori: "fun"
+    kategori: "",
 };

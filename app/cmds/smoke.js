@@ -14,27 +14,27 @@ const {
   product,
 } = MessageType;
 
-exports.run = (zef, msg, args, from, runnin) => {
+exports.run = (zef, msg, args, from) => {
     setTimeout(() => {
-        runnin.sendText('🚬');
+        zef.sendText('🚬');
       }, 500);
       setTimeout(() => {
-        runnin.sendText('🚬 ☁ ');
+        zef.sendText('🚬 ☁ ');
       }, 1000);
       setTimeout(() => {
-        runnin.sendText('🚬 ☁☁ ');
+        zef.sendText('🚬 ☁☁ ');
       }, 1500);
       setTimeout(() => {
-        runnin.sendText('🚬 ☁☁☁ ');
+        zef.sendText('🚬 ☁☁☁ ');
       }, 2000);
       setTimeout(() => {
-        runnin.sendText('🚬 ☁☁');
+        zef.sendText('🚬 ☁☁');
       }, 2500);
       setTimeout(() => {
-        runnin.sendText('🚬 ☁');
+        zef.sendText('🚬 ☁');
       }, 3000);
       setTimeout(() => {
-        runnin.sendText('🚬 ');
+        zef.sendText('🚬 ');
       }, 3500);    
 };
 

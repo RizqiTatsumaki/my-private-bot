@@ -16,12 +16,13 @@ const {
 
 exports.run = async (zef, msg, args, from, runnin) => {
   if (
-    runnin.id !== runnin.config.developer.ibnu &&
-    runnin.id !== runnin.config.developer.zefian &&
-    runnin.id !== runnin.config.developer.rizqi &&
-    runnin.id !== runnin.config.developer.bot
+    zef.id !== zef.config.developer.ibnu &&
+    zef.id !== zef.config.developer.zefian &&
+    zef.id !== zef.config.developer.rizqi &&
+    zef.id !== zef.config.developer.bot
   )
-    return runnin.reply("just owner");
+    return zef.reply("just owner");
+  if (args.length < 1) return zef.reply("masukan teks");
   function clean(text) {
     if (typeof text === "string")
       return text
@@ -36,7 +37,7 @@ exports.run = async (zef, msg, args, from, runnin) => {
     if (typeof evaled !== "string") evaled = require("util").inspect(evaled);
     zef.sendMessage(from, clean(evaled), text);
   } catch (err) {
-    runnin.sendText(`${clean(err)}`);
+    zef.sendText(`${clean(err)}`);
   }
 };
 
